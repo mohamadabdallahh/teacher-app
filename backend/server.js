@@ -356,7 +356,22 @@ app.delete("/notes/:id", async (req, res) => {
         res.status(500).json({ error: "Server error" });
     }
 });
-
+// مسار ترحيبي للجذر
+app.get("/", (req, res) => {
+    res.json({
+        message: "Teacher Dashboard API is running! 🚀",
+        status: "online",
+        endpoints: {
+            users: "/user/:userId",
+            login: "/login",
+            signup: "/signup",
+            classes: "/classes/:userId",
+            students: "/students/:classId",
+            exams: "/exams/:classId",
+            grades: "/grades/:classId"
+        }
+    });
+});
 // تصدير التطبيق لـ Vercel
 module.exports = app;
 
