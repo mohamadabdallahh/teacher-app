@@ -63,7 +63,10 @@ app.post("/login", async (req, res) => {
 });
 
 // ----------------- إنشاء حساب جديد -----------------
+
+
 app.post("/signup", async (req, res) => {
+    console.log("📥 Received signup data:", req.body);
     const { username, password, security_code, firstName, lastName, birthDate } = req.body;
     if (!username || !password || !security_code || !firstName || !lastName || !birthDate) {
         return res.status(400).json({ error: "All fields are required" });
