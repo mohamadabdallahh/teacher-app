@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = "https://teacher-app-backend-wt82.onrender.com/";
+const API = "https://teacher-app-backend-wt82.onrender.com";
 console.log("API set to:", API);
 
 export default function App() {
