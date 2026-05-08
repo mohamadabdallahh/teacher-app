@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = process.env.REACT_APP_API_URL || "https://teacher-app-backendd.onrender.com/";
+const API = process.env.REACT_APP_API_URL || "https://teacher-app-backend-wt82.onrender.com/";
 
 export default function App() {
     const inputsRef = useRef([]);
