@@ -204,30 +204,7 @@ useEffect(() => {
     setGroupError("");
 }, [groupType, groupCount]);
     
-    // حساب متوسط الصف بالكامل
-    const getClassAverage = () => {
-        if (students.length === 0 || exams.length === 0) return 0;
-        let totalSum = 0;
-        let totalStudents = 0;
-        
-        students.forEach(student => {
-            let studentTotal = 0;
-            let studentMax = 0;
-            exams.forEach(exam => {
-                const grade = grades[student.id]?.[exam.id]?.score;
-                if (grade !== null && grade !== undefined && grade !== "") {
-                    studentTotal += Number(grade);
-                    studentMax += Number(exam.total);
-                }
-            });
-            if (studentMax > 0) {
-                totalSum += (studentTotal / studentMax) * 100;
-                totalStudents++;
-            }
-        });
-        
-        return totalStudents > 0 ? (totalSum / totalStudents).toFixed(1) : 0;
-    };
+   
     
     // Auth functions
     const handleSignup = () => {
