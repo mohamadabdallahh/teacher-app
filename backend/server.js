@@ -64,10 +64,38 @@ app.post("/login", async (req, res) => {
 
 // ----------------- إنشاء حساب جديد -----------------
 
-
 app.post("/signup", async (req, res) => {
     console.log("📥 Received signup data:", req.body);
-    const { username, password, security_code, firstName, lastName, birthDate } = req.body;
+    let { username, password, security_code, firstName, lastName, birthDate } = req.body;
+    
+    // ✅ التحقق من صحة التاريخ (أضف هذا القسم)
+    if (birthDate) {
+        const dateParts = birthDate.split('-');
+        if (dateParts.length !== 3) {
+            return res.status(400).json({ error: "Invalid birth date format. Use YYYY-MM-DD" });
+        }
+        
+        const year = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10);
+        const day = parseInt(dateParts[2], 10);
+        
+        // التحقق من أن الشهر بين 1-12 واليوم بين 1-31
+        if (month < 1 || month > 12 || day < 1 || day > 31) {
+            return res.status(400).json({ error: "Invalid birth date. Month must be 1-12 and day 1-31" });
+        }
+        
+        const correctedDate = new Date(year, month - 1, day);
+        if (correctedDate.getFullYear() !== year || 
+            correctedDate.getMonth() !== month - 1 || 
+            correctedDate.getDate() !== day) {
+            return res.status(400).json({ error: "Invalid birth date. Please use a real date (e.g., 2000-01-31)" });
+        }
+        
+        // إعادة تنسيق التاريخ بشكل صحيح
+        birthDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    }
+    
+    // باقي الكود كما هو
     if (!username || !password || !security_code || !firstName || !lastName || !birthDate) {
         return res.status(400).json({ error: "All fields are required" });
     }
