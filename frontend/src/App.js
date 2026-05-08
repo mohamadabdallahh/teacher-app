@@ -3,6 +3,7 @@ import axios from "axios";
 import "./App.css";
 
 const API = "https://teacher-app-backend-wt82.onrender.com/";
+console.log("API set to:", API);
 
 export default function App() {
     const inputsRef = useRef([]);
@@ -207,16 +208,36 @@ useEffect(() => {
    
     
     // Auth functions
+       // Auth functions
     const handleSignup = () => {
         const { username, password, securityCode, firstName, lastName, birthDate } = signupData;
+        
+        // 1. التحقق من الحقول الأساسية
         if (!username || !password || !securityCode || !firstName || !lastName || !birthDate) {
             setError("All fields are required");
             return;
         }
+        
+        // 2. التحقق من رمز الأمان
         if (!/^\d{4}$/.test(securityCode)) {
             setError("Security code must be exactly 4 digits");
             return;
         }
+        
+        // 3. ✅ التحقق من صحة التاريخ (تمت إضافته في المكان الصحيح)
+        const birthDateObj = new Date(birthDate);
+        if (isNaN(birthDateObj.getTime())) {
+            setError("Invalid birth date. Please use the format YYYY-MM-DD (e.g., 2000-01-31).");
+            return;
+        }
+        
+        // (اختياري) التحقق من أن التاريخ ليس في المستقبل
+        if (birthDateObj > new Date()) {
+            setError("Birth date cannot be in the future.");
+            return;
+        }
+        
+        // 4. إرسال البيانات إلى الخادم
         axios.post(`${API}/signup`, {
             username,
             password,
@@ -242,7 +263,6 @@ useEffect(() => {
             }
         }).catch(err => setError(err.response?.data?.error || "Signup failed"));
     };
-    
     const handleLogin = () => {
         if (!loginUsername.trim()) { setError("Username required"); return; }
         if (loginMethod === "password") {
