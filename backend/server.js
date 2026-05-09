@@ -200,6 +200,7 @@ app.get("/students/:classId", async (req, res) => {
             query += " AND name LIKE $2";
             params.push(`%${search}%`);
         }
+        query += " ORDER BY name ASC";
         const result = await pool.query(query, params);
         res.json(result.rows);
     } catch (err) {

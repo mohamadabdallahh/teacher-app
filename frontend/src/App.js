@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
 
-const API = "https://teacher-app-backend-wt82.onrender.com";
+const API = process.env.REACT_APP_API_URL || "http://localhost:5000";
 console.log("API set to:", API);
 
 export default function App() {
@@ -954,9 +954,12 @@ if (view === "dashboard") {
     // ----------------- GRADES -----------------
     // ----------------- GRADES -----------------
 if (view === "grades") {
-    const filteredStudents = searchTerm.trim() === "" 
-        ? students 
+    const filteredStudents = (() => {
+    let filtered = searchTerm.trim() === "" 
+        ? [...students] 
         : students.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    return filtered.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+})();
     
     const noStudents = students.length === 0;
     const searchNotFound = searchTerm.trim() !== "" && filteredStudents.length === 0;
