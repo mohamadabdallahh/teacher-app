@@ -13,6 +13,7 @@ export default function App() {
     const [userInfo, setUserInfo] = useState(null);
     const [error, setError] = useState("");
     const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+    const [isLoading, setIsLoading] = useState(false);
     
     // Login data
     const [loginUsername, setLoginUsername] = useState("");
@@ -204,86 +205,105 @@ useEffect(() => {
     setGroupError("");
 }, [groupType, groupCount]);
     
-   
-    
-    // Auth functions
+
        // Auth functions
-    const handleSignup = () => {
-        const { username, password, securityCode, firstName, lastName, birthDate } = signupData;
-        
-        // 1. التحقق من الحقول الأساسية
-        if (!username || !password || !securityCode || !firstName || !lastName || !birthDate) {
-            setError("All fields are required");
-            return;
-        }
-        
-        // 2. التحقق من رمز الأمان
-        if (!/^\d{4}$/.test(securityCode)) {
-            setError("Security code must be exactly 4 digits");
-            return;
-        }
-        
-        // 3. ✅ التحقق من صحة التاريخ (تمت إضافته في المكان الصحيح)
-        const birthDateObj = new Date(birthDate);
-        if (isNaN(birthDateObj.getTime())) {
-            setError("Invalid birth date. Please use the format YYYY-MM-DD (e.g., 2000-01-31).");
-            return;
-        }
-        
-        // (اختياري) التحقق من أن التاريخ ليس في المستقبل
-        if (birthDateObj > new Date()) {
-            setError("Birth date cannot be in the future.");
-            return;
-        }
-        
-        // 4. إرسال البيانات إلى الخادم
-        axios.post(`${API}/signup`, {
-            username,
-            password,
-            security_code: securityCode,
-            firstName,
-            lastName,
-            birthDate
-        }).then(async () => {
-            showToast("Account created! Logging you in...", "success");
-            // تسجيل الدخول التلقائي بعد إنشاء الحساب
-            try {
-                const loginRes = await axios.post(`${API}/login`, { username, password });
-                if (loginRes.data.userId) {
-                    setUserId(loginRes.data.userId);
-                    loadClasses(loginRes.data.userId);
-                    showToast(`Welcome, ${username}!`, "success");
-                    setError("");
-                    setSignupData({ username: "", password: "", securityCode: "", firstName: "", lastName: "", birthDate: "" });
-                }
-            } catch (err) {
-                setError("Account created! Please login manually.");
-                setMode("login");
+  const handleSignup = () => {
+    const { username, password, securityCode, firstName, lastName, birthDate } = signupData;
+    
+    // 1. التحقق من الحقول الأساسية
+    if (!username || !password || !securityCode || !firstName || !lastName || !birthDate) {
+        setError("All fields are required");
+        return;
+    }
+    
+    // 2. التحقق من رمز الأمان
+    if (!/^\d{4}$/.test(securityCode)) {
+        setError("Security code must be exactly 4 digits");
+        return;
+    }
+    
+    // 3. التحقق من صحة التاريخ
+    const birthDateObj = new Date(birthDate);
+    if (isNaN(birthDateObj.getTime())) {
+        setError("Invalid birth date. Please use the format YYYY-MM-DD (e.g., 2000-01-31).");
+        return;
+    }
+    
+    // (اختياري) التحقق من أن التاريخ ليس في المستقبل
+    if (birthDateObj > new Date()) {
+        setError("Birth date cannot be in the future.");
+        return;
+    }
+    
+    // ✅ أضف هالأسطر هنا (قبل axios.post)
+    setIsLoading(true);
+    setError("");
+    
+    // 4. إرسال البيانات إلى الخادم
+    axios.post(`${API}/signup`, {
+        username,
+        password,
+        security_code: securityCode,
+        firstName,
+        lastName,
+        birthDate
+    }).then(async () => {
+        showToast("Account created! Logging you in...", "success");
+        // تسجيل الدخول التلقائي بعد إنشاء الحساب
+        try {
+            const loginRes = await axios.post(`${API}/login`, { username, password });
+            if (loginRes.data.userId) {
+                setUserId(loginRes.data.userId);
+                loadClasses(loginRes.data.userId);
+                showToast(`Welcome, ${username}!`, "success");
+                setError("");
+                setSignupData({ username: "", password: "", securityCode: "", firstName: "", lastName: "", birthDate: "" });
             }
-        }).catch(err => setError(err.response?.data?.error || "Signup failed"));
-    };
-    const handleLogin = () => {
-        if (!loginUsername.trim()) { setError("Username required"); return; }
-        if (loginMethod === "password") {
-            if (!loginPassword.trim()) { setError("Password required"); return; }
-            axios.post(`${API}/login`, { username: loginUsername, password: loginPassword })
-                .then(res => {
-                    setUserId(res.data.userId);
-                    showToast(`Welcome back, ${loginUsername}!`);
-                    setError("");
-                })
-                .catch(err => setError(err.response?.data?.error));
-        } else {
-            if (!loginSecurityCode.trim()) { setError("Security code required"); return; }
-            axios.post(`${API}/login`, { username: loginUsername, security_code: loginSecurityCode })
-                .then(res => {
-                    setUserId(res.data.userId);
-                    showToast(`Welcome back, ${loginUsername}!`);
-                    setError("");
-                })
-                .catch(err => setError(err.response?.data?.error));
+        } catch (err) {
+            setError("Account created! Please login manually.");
+            setMode("login");
         }
-    };
+    }).catch(err => {
+        setError(err.response?.data?.error || "Signup failed");
+    }).finally(() => setIsLoading(false));  // ✅ أضف هالسطر
+};
+const handleLogin = () => {
+    if (!loginUsername.trim()) { setError("Username required"); return; }
+    
+    // ✅ أضف هالأسطر هنا (بعد الـ if وقبل أي شيء ثاني)
+    setIsLoading(true);
+    setError("");
+    
+    if (loginMethod === "password") {
+        if (!loginPassword.trim()) { 
+            setError("Password required"); 
+            setIsLoading(false);  // ✅ أضف هالسطر كمان
+            return; 
+        }
+        axios.post(`${API}/login`, { username: loginUsername, password: loginPassword })
+            .then(res => {
+                setUserId(res.data.userId);
+                showToast(`Welcome back, ${loginUsername}!`);
+                setError("");
+            })
+            .catch(err => setError(err.response?.data?.error))
+            .finally(() => setIsLoading(false));  // ✅ أضف هالسطر
+    } else {
+        if (!loginSecurityCode.trim()) { 
+            setError("Security code required"); 
+            setIsLoading(false);  // ✅ أضف هالسطر كمان
+            return; 
+        }
+        axios.post(`${API}/login`, { username: loginUsername, security_code: loginSecurityCode })
+            .then(res => {
+                setUserId(res.data.userId);
+                showToast(`Welcome back, ${loginUsername}!`);
+                setError("");
+            })
+            .catch(err => setError(err.response?.data?.error))
+            .finally(() => setIsLoading(false));  // ✅ أضف هالسطر
+    }
+};
     
     const handleResetPassword = () => {
         if (!resetUsername.trim()) { setError("Username required"); return; }
@@ -609,7 +629,9 @@ const confirmDeleteClass = () => {
                                 </button>
                             </div>
                             {error && <div className="error">{error}</div>}
-                            <button className="btn primary" onClick={handleLogin}>Login</button>
+                            <button className="btn primary" onClick={handleLogin} disabled={isLoading}>
+    {isLoading ? "⏳ Logging in..." : "Login"}
+</button>
                             <button className="btn" onClick={openResetModal}>Forgot Password?</button>
                             <button className="btn" onClick={switchToSignup}>Sign Up</button>
                         </>
@@ -622,7 +644,9 @@ const confirmDeleteClass = () => {
                             <input placeholder="Last Name" value={signupData.lastName} onChange={e => setSignupData({ ...signupData, lastName: e.target.value })} />
                             <input type="date" placeholder="Birth Date" value={signupData.birthDate} onChange={e => setSignupData({ ...signupData, birthDate: e.target.value })} />
                             {error && <div className="error">{error}</div>}
-                            <button className="btn primary" onClick={handleSignup}>Sign Up</button>
+                            <button className="btn primary" onClick={handleSignup} disabled={isLoading}>
+    {isLoading ? "⏳ Creating account..." : "Sign Up"}
+</button>
                             <button className="btn" onClick={switchToLogin}>Back to Login</button>
                         </>
                     )}
