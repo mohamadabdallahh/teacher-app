@@ -34,8 +34,8 @@ app.get("/user/:userId", async (req, res) => {
 
         const user = result.rows[0];
 
-        user.security_code =
-            user.security_code.substring(0, 2) + "**";
+       user.security_code =
+    user.security_code[0] + "**" + user.security_code[3];
 
         res.json(user);
 
