@@ -22,13 +22,23 @@ pool.connect((err) => {
 // ----------------- جلب معلومات المستخدم -----------------
 app.get("/user/:userId", async (req, res) => {
     const { userId } = req.params;
+
     try {
         const result = await pool.query(
             "SELECT id, username, first_name, last_name, birth_date, security_code FROM users WHERE id = $1",
             [userId]
         );
-        if (result.rows.length === 0) return res.status(404).json({ error: "User not found" });
-        res.json(result.rows[0]);
+
+        if (result.rows.length === 0)
+            return res.status(404).json({ error: "User not found" });
+
+        const user = result.rows[0];
+
+        user.security_code =
+            user.security_code.substring(0, 2) + "**";
+
+        res.json(user);
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server error" });
